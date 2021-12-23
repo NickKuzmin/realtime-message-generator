@@ -54,7 +54,7 @@ namespace MessageGenerator.Web
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
-                endpoints.MapHub<MessageHub>("/chatHub");
+                endpoints.MapHub<MessageHub>("/messageHub");
             });
 
             app.UseSpa(spa =>

@@ -15,7 +15,7 @@ class Messages extends React.PureComponent<MessageProps> {
   public componentDidMount() {
       this.ensureDataFetched();
 
-      const connection = new SignalR.HubConnectionBuilder().withUrl('/chatHub').build();
+      const connection = new SignalR.HubConnectionBuilder().withUrl('/messageHub').build();
       connection.start();
       connection.on('SendMessages', data => {
           this.props.messageReceived(data);
