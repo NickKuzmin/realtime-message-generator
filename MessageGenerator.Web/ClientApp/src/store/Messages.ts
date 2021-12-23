@@ -15,12 +15,10 @@ export interface Message {
 
 interface RequestMessagesAction {
     type: 'REQUEST_MESSAGES';
-    startDateIndex: number;
 }
 
 interface ReceiveMessagesAction {
     type: 'RECEIVE_MESSAGES';
-    startDateIndex: number;
     messages: Message[];
 }
 
@@ -32,16 +30,16 @@ interface SignalRMessageReceived {
 type KnownAction = RequestMessagesAction | ReceiveMessagesAction | SignalRMessageReceived;
 
 export const actionCreators = {
-    requestMessages: (startDateIndex: number): AppThunkAction<KnownAction> => (dispatch, getState) => {
+    requestMessages: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
         const appState = getState();
-        if (appState && appState.messagesState && startDateIndex !== appState.messagesState.startDateIndex) {
+        if (appState && appState.messagesState) {
             fetch(`message`)
                 .then(response => response.json() as Promise<Message[]>)
                 .then(data => {
-                    dispatch({ type: 'RECEIVE_MESSAGES', startDateIndex: startDateIndex, messages: data });
+                    dispatch({ type: 'RECEIVE_MESSAGES', messages: data });
                 });
 
-            dispatch({ type: 'REQUEST_MESSAGES', startDateIndex: startDateIndex });
+            dispatch({ type: 'REQUEST_MESSAGES' });
         }
     },
     messageReceived: (messages: Message[]): AppThunkAction<KnownAction> => (dispatch, getState) => {
@@ -60,23 +58,18 @@ export const reducer: Reducer<MessagesState> = (state: MessagesState | undefined
     switch (action.type) {
         case 'REQUEST_MESSAGES':
             return {
-                startDateIndex: action.startDateIndex,
                 messages: state.messages,
                 isLoading: true
             };
         case 'RECEIVE_MESSAGES':
-            if (action.startDateIndex === state.startDateIndex) {
-                return {
-                    startDateIndex: action.startDateIndex,
-                    messages: action.messages,
-                    isLoading: false
-                };
-            }
-            break;
+            return {
+                messages: action.messages,
+                isLoading: false
+            };
         case 'SIGNALR_MESSAGE_RECEIVED':
             if (action.messages) {
                 return {
-                    messages: action.messages,
+                    messages: [...action.messages, ...state.messages],
                     isLoading: false
                 };
             }
