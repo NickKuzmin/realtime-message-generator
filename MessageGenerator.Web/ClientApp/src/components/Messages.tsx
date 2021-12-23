@@ -4,24 +4,27 @@ import { RouteComponentProps } from 'react-router';
 import { Link } from 'react-router-dom';
 import { ApplicationState } from '../store';
 import * as MessagesStore from '../store/Messages';
+import * as SignalR from '@aspnet/signalr';
 
-// At runtime, Redux will merge together...
 type MessageProps =
-    MessagesStore.MessagesState // ... state we've requested from the Redux store
-  & typeof MessagesStore.actionCreators // ... plus action creators we've requested
-  & RouteComponentProps<{ startDateIndex: string }>; // ... plus incoming routing parameters
-
+    MessagesStore.MessagesState
+  & typeof MessagesStore.actionCreators
+  & RouteComponentProps<{ startDateIndex: string }>;
 
 class Messages extends React.PureComponent<MessageProps> {
-  // This method is called when the component is first added to the document
   public componentDidMount() {
-    this.ensureDataFetched();
+      this.ensureDataFetched();
+
+      const connection = new SignalR.HubConnectionBuilder().withUrl('/chatHub').build();
+      connection.start();
+      connection.on('SendMessages', data => {
+          this.props.messageReceived(data);
+      });
   }
 
-  // This method is called when the route parameters change
   public componentDidUpdate() {
-    this.ensureDataFetched();
-  }
+      this.ensureDataFetched();
+    }
 
   public render() {
     return (
@@ -40,24 +43,26 @@ class Messages extends React.PureComponent<MessageProps> {
   }
 
     private renderMessagesTable() {
-    return (
-      <table className='table table-striped' aria-labelledby="tabelLabel">
-        <thead>
-          <tr>
-                <th>uid</th>
-                <th>content</th>
-          </tr>
-        </thead>
-        <tbody>
-            {this.props.messages.map((message: MessagesStore.Message) =>
-              <tr key={message.uid}>
-                  <td>{message.uid}</td>
-                  <td>{message.content}</td>
+        return (
+        <table className='table table-striped' aria-labelledby="tabelLabel">
+            <thead>
+            <tr>
+                <th>Uid</th>
+                <th>CreatedDate</th>
+                <th>Content</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-    );
+            </thead>
+            <tbody>
+            {this.props.messages.map((message: MessagesStore.Message) =>
+                <tr key={message.uid}>
+                    <td>{message.uid}</td>
+                    <td>{message.createdDate.toLocaleString()}</td>
+                    <td>{message.content}</td>
+                </tr>
+            )}
+            </tbody>
+        </table>
+        );
   }
 
   private renderPagination() {
@@ -75,6 +80,6 @@ class Messages extends React.PureComponent<MessageProps> {
 }
 
 export default connect(
-    (state: ApplicationState) => state.messagesState, // Selects which state properties are merged into the component's props
-    MessagesStore.actionCreators // Selects which action creators are merged into the component's props
-)(Messages as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    (state: ApplicationState) => state.messagesState,
+    MessagesStore.actionCreators
+)(Messages as any);

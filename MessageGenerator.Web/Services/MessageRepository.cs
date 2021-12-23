@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using MessageGenerator.Web.Models;
 
 namespace MessageGenerator.Web.Services
@@ -7,12 +8,12 @@ namespace MessageGenerator.Web.Services
     {
         IEnumerable<MessageApiModel> Get();
 
-        void Add(MessageApiModel messageApiModel);
+        void Add(IEnumerable<MessageApiModel> messages);
     }
 
     public class MessageRepository : IMessageRepository
     {
-        private readonly IList<MessageApiModel> _messages;
+        private readonly List<MessageApiModel> _messages;
 
         public MessageRepository()
         {
@@ -21,12 +22,12 @@ namespace MessageGenerator.Web.Services
 
         public IEnumerable<MessageApiModel> Get()
         {
-            return _messages;
+            return _messages.OrderByDescending(x => x.CreatedDate);
         }
 
-        public void Add(MessageApiModel messageApiModel)
+        public void Add(IEnumerable<MessageApiModel> messages)
         {
-            _messages.Add(messageApiModel);
+            _messages.AddRange(messages);
         }
     }
 }
