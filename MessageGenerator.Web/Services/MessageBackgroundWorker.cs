@@ -32,7 +32,7 @@ namespace MessageGenerator.Web.Services
                 _messageRepository.Add(messages);
 
                 await _clockHub.Clients.All.SendMessages(messages);
-                await Task.Delay(20000, stoppingToken);
+                await Task.Delay(5000, stoppingToken);
             }
         }
     }
